@@ -13,7 +13,7 @@
 ## This script is also sourced in the Makefile, as such it should be compatible
 ## with both the make and sh syntax
 
-ocaml_version=4.12.0+domains
+ocaml_version=4.14.0+domains+dev0
 opam_version=2.1
 recommended_rust_version=1.52.1
 
@@ -25,7 +25,7 @@ export full_opam_repository_tag=754c005bee4b198787ffc01f82e6c1f9c6356c2c
 ## This value MUST be the same as `build_deps_image_version` in `.gitlab-ci.yml
 opam_repository_tag=1db0e28de40c6416ed75ee092f7a803fe326069d
 opam_repository_url=https://github.com/Sudha247/tezos-opam-repository
-opam_repository_git=$opam_repository_url.git#latest
+opam_repository_git=$opam_repository_url.git#latest-5.00
 opam_repository=$opam_repository_git
 
 ## for sapling param, fork is on github, url convention not the same in install_sapling_parameters
