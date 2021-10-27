@@ -14,7 +14,8 @@
   tezos-rpc
   tezos-stdlib
   ringo
-  zarith)
+  zarith
+  domainslib)
  (flags
   (:standard
    -open Tezos_stdlib

@@ -59,6 +59,8 @@ include
     serialization of the signature of [buf] signed by [sk]. *)
 val append : ?watermark:watermark -> secret_key -> Bytes.t -> Bytes.t
 
+val check_many: (public_key * t * Bytes.t) Array.t -> unit
+
 (** [concat buf t] is the concatenation of [buf] and the serialization
     of [t]. *)
 val concat : Bytes.t -> t -> Bytes.t
