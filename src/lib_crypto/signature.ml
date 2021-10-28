@@ -729,17 +729,17 @@ let check ?watermark public_key signature message =
           res)
   | _ -> check ?watermark public_key signature message
 
-  module T = Domainslib.Task
+module T = Domainslib.Task
 
-  let p = T.setup_pool ~num_additional_domains:1 ~name:"sig" ()
+let p = T.setup_pool ~num_additional_domains:3 ~name:"crypt" ()
   
-  exception False
+exception False
   
-  let check_many arr =
-    let l = Array.length arr in
-    T.parallel_for p ~start:0 ~finish:(l - 1) ~body:(fun i ->
-      let (public_key, signature, message) = arr.(i) in
-      if (check public_key signature message) then () else raise False)
+let check_many arr =
+  let l = Array.length arr in
+  T.parallel_for p ~start:0 ~finish:(l - 1) ~body:(fun i ->
+    let (public_key, signature, message) = arr.(i) in
+    if (check public_key signature message) then () else raise False)
   
 let append ?watermark sk msg = Bytes.cat msg (to_bytes (sign ?watermark sk msg))
 

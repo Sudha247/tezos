@@ -45,8 +45,10 @@ let error_info process error =
 
 type sysname = Linux | Darwin | Unknown of string
 
-let uname =
-  Lwt.catch
+let uname = Lwt.return_ok Linux
+let _ = Lwt.return_ok Darwin
+let _ = Lwt.return_ok (Unknown "apple")
+  (* Lwt.catch
     (fun () ->
       Lwt_process.with_process_in
         ~env:[|"LC_ALL=C"|]
@@ -57,7 +59,7 @@ let uname =
       | "Darwin" -> Lwt.return_ok Darwin
       | os -> Lwt.return_ok (Unknown os))
     (function
-      | exn -> Lwt.return_error (error_info "uname" (Printexc.to_string exn)))
+      | exn -> Lwt.return_error (error_info "uname" (Printexc.to_string exn))) *)
 
 let page_size () =
   let get_conf_process =
@@ -120,7 +122,7 @@ let linux_statm pid =
       | exn ->
           Lwt.return_error (error_info "procfs statm" (Printexc.to_string exn)))
 
-let darwin_ps pid =
+(* let darwin_ps pid =
   Lwt.catch
     (fun () ->
       Lwt_process.with_process_in
@@ -154,12 +156,14 @@ let darwin_ps pid =
                   | _ -> Lwt.return_error (error_info "ps" "Unexpected answer"))
               )))
     (function
-      | exn -> Lwt.return_error (error_info "ps" (Printexc.to_string exn)))
+      | exn -> Lwt.return_error (error_info "ps" (Printexc.to_string exn))) *)
 
 let memory_stats () =
-  let pid = Unix.getpid () in
+  let pid = Unix.getpid () in 
+  linux_statm pid
+  (* let pid = Unix.getpid () in
   uname >>= function
   | Error e -> Lwt.return_error e
   | Ok Linux -> linux_statm pid
   | Ok Darwin -> darwin_ps pid
-  | _ -> Lwt.return_error (error_info "memory_stats" "Unknown unix system")
+  | _ -> Lwt.return_error (error_info "memory_stats" "Unknown unix system") *)
