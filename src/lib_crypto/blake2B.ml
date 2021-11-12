@@ -265,7 +265,7 @@ struct
         (* List.iteri (fun i x -> a.(i) <- H.leaf x) xs ; *)
         let p = match Domainslib.Task.lookup_pool "crypt" with 
           | Some x -> x
-          | None -> Domainslib.Task.setup_pool ~num_additional_domains:1 ~name:"crypt" ()
+          | None -> Domainslib.Task.setup_pool ~num_additional_domains:4 ~name:"crypt" ()
         in
         Domainslib.Task.parallel_for p ~start:0 ~finish:(n - 1)
         ~body:(fun i -> a.(i) <- H.leaf a2.(i));
@@ -299,7 +299,7 @@ struct
         let a2 = Array.of_list xs in
         let p = match Domainslib.Task.lookup_pool "crypt" with 
           | Some x -> x
-          | None -> Domainslib.Task.setup_pool ~num_additional_domains:1 ~name:"crypt" ()
+          | None -> Domainslib.Task.setup_pool ~num_additional_domains:4 ~name:"crypt" ()
         in
         Domainslib.Task.parallel_for p ~start:0 ~finish:(n - 1)
         ~body:(fun i -> a.(i) <- H.leaf a2.(i));

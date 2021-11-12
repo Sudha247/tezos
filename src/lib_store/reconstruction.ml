@@ -163,12 +163,30 @@ let check_context_hash_consistency block_validation_result block_header =
 let compute_block_metadata_hash block_metadata =
   Some (Block_metadata_hash.hash_bytes block_metadata)
 
+let parallel_map pool ?(chunk_size=0) f ls =
+  let arr = Array.of_list ls in
+  let len = Array.length arr in
+  let res = Array.make len (f arr.(0)) in
+  Domainslib.Task.parallel_for ~chunk_size ~start:1 ~finish:(len - 1)
+  ~body:(fun i ->
+    res.(i) <- (f arr.(i))) pool;
+  Array.to_list res
+
 (* We assume that the given list is not empty. *)
 let compute_operations_metadata_hashes ops_metadata_hashes =
+  let p = match Domainslib.Task.lookup_pool "crypt" with 
+          | Some x -> x
+          | None -> Domainslib.Task.setup_pool
+            ~num_additional_domains:4 ~name:"crypt" ()
+        in
   Some
-    (List.map
+    (* (List.map
        (List.map (fun r -> Operation_metadata_hash.hash_bytes [r]))
-       ops_metadata_hashes)
+       ops_metadata_hashes) *)
+    (parallel_map p 
+      (List.map (fun r -> Operation_metadata_hash.hash_bytes [r])) ops_metadata_hashes)
+    (* (parallel_map p (parallel_map p 
+      (fun r -> Operation_metadata_hash.hash_bytes [r])) ops_metadata_hashes) *)
 
 let compute_all_operations_metadata_hash block =
   if Block_repr.validation_passes block = 0 then None
