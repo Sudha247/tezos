@@ -265,7 +265,7 @@ struct
         (* List.iteri (fun i x -> a.(i) <- H.leaf x) xs ; *)
         let p = match Domainslib.Task.lookup_pool "crypt" with 
           | Some x -> x
-          | None -> Domainslib.Task.setup_pool ~num_additional_domains:1 ()
+          | None -> Domainslib.Task.setup_pool ~num_additional_domains:1 ~name:"crypt" ()
         in
         Domainslib.Task.parallel_for p ~start:0 ~finish:(n - 1)
         ~body:(fun i -> a.(i) <- H.leaf a2.(i));
@@ -295,7 +295,14 @@ struct
         let n = List.length xs in
         if i < 0 || n <= i then invalid_arg "compute_path" ;
         let a = Array.make (n + 1) (H.leaf last) in
-        List.iteri (fun i x -> a.(i) <- H.leaf x) xs ;
+        (* List.iteri (fun i x -> a.(i) <- H.leaf x) xs ; *)
+        let a2 = Array.of_list xs in
+        let p = match Domainslib.Task.lookup_pool "crypt" with 
+          | Some x -> x
+          | None -> Domainslib.Task.setup_pool ~num_additional_domains:1 ~name:"crypt" ()
+        in
+        Domainslib.Task.parallel_for p ~start:0 ~finish:(n - 1)
+        ~body:(fun i -> a.(i) <- H.leaf a2.(i));
         step_path a n Op i
 
   let rec check_path p h =
