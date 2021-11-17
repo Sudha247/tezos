@@ -43,10 +43,11 @@ let error_info process error =
   Unix_system_info_failure
     (Format.asprintf "Unix_system_info_failure (%s: %s)" process error)
 
-type sysname = Linux | Darwin | Unknown of string
+type sysname = Linux
+(* | Darwin | Unknown of string *)
 
-let uname =
-  Lwt.catch
+let uname = Lwt.return_ok Linux
+  (* Lwt.catch
     (fun () ->
       Lwt_process.with_process_in
         ~env:[|"LC_ALL=C"|]
@@ -57,15 +58,15 @@ let uname =
       | "Darwin" -> Lwt.return_ok Darwin
       | os -> Lwt.return_ok (Unknown os))
     (function
-      | exn -> Lwt.return_error (error_info "uname" (Printexc.to_string exn)))
+      | exn -> Lwt.return_error (error_info "uname" (Printexc.to_string exn))) *)
 
 let page_size () =
   let get_conf_process =
     uname >>= function
     | Ok Linux -> Lwt.return_ok ("getconf", [|"getconf"; "PAGE_SIZE"|])
-    | Ok Darwin -> Lwt.return_ok ("pagesize", [|"pagesize"|])
+    (* | Ok Darwin -> Lwt.return_ok ("pagesize", [|"pagesize"|])
     | Ok (Unknown _) ->
-        Lwt.return_error (error_info "pagesize" "Unknown unix system")
+        Lwt.return_error (error_info "pagesize" "Unknown unix system") *)
     | Error (Unix_system_info_failure e) ->
         Lwt.return_error (error_info "pagesize" e)
     | Error e -> Lwt.return_error e
@@ -120,7 +121,7 @@ let linux_statm pid =
       | exn ->
           Lwt.return_error (error_info "procfs statm" (Printexc.to_string exn)))
 
-let darwin_ps pid =
+(* let darwin_ps pid =
   Lwt.catch
     (fun () ->
       Lwt_process.with_process_in
@@ -154,12 +155,12 @@ let darwin_ps pid =
                   | _ -> Lwt.return_error (error_info "ps" "Unexpected answer"))
               )))
     (function
-      | exn -> Lwt.return_error (error_info "ps" (Printexc.to_string exn)))
+      | exn -> Lwt.return_error (error_info "ps" (Printexc.to_string exn))) *)
 
 let memory_stats () =
   let pid = Unix.getpid () in
   uname >>= function
   | Error e -> Lwt.return_error e
   | Ok Linux -> linux_statm pid
-  | Ok Darwin -> darwin_ps pid
-  | _ -> Lwt.return_error (error_info "memory_stats" "Unknown unix system")
+  (* | Ok Darwin -> darwin_ps pid *)
+  (* | _ -> Lwt.return_error (error_info "memory_stats" "Unknown unix system") *)

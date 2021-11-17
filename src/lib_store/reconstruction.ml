@@ -173,10 +173,12 @@ let compute_operations_metadata_hashes ops_metadata_hashes =
 let compute_all_operations_metadata_hash block =
   if Block_repr.validation_passes block = 0 then None
   else
+    let p = Parallel.get_pool "crypto" in
     Option.map
       (fun ll ->
         Operation_metadata_list_list_hash.compute
-          (List.map Operation_metadata_list_hash.compute ll))
+          (* (List.map Operation_metadata_list_hash.compute ll)) *)
+          (Parallel.parallel_map_list p Operation_metadata_list_hash.compute ll))
       (Block_repr.operations_metadata_hashes block)
 
 let apply_context context_index chain_id ~user_activated_upgrades

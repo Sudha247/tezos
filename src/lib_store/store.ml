@@ -638,10 +638,12 @@ module Block = struct
     (* Special case: for genesis, do not commit operation metadatas *)
     if validation_passes blk = 0 then None
     else
+      let p = Parallel.get_pool "crypto" in
       Option.map
         (fun ll ->
           Operation_metadata_list_list_hash.compute
-            (List.map Operation_metadata_list_hash.compute ll))
+            (* (List.map Operation_metadata_list_hash.compute ll)) *)
+            (Parallel.parallel_map_list p Operation_metadata_list_hash.compute ll))
         (Block_repr.operations_metadata_hashes blk)
 
   (** Metadata accessors *)
@@ -658,7 +660,9 @@ module Block = struct
   let operations_metadata metadata = Block_repr.operations_metadata metadata
 
   let compute_operation_path hashes =
-    let list_hashes = List.map Operation_list_hash.compute hashes in
+    let p = Parallel.get_pool "crypto" in
+    (* let list_hashes = List.map Operation_list_hash.compute hashes in *)
+    let list_hashes = Parallel.parallel_map_list p Operation_list_hash.compute hashes in
     Operation_list_list_hash.compute_path list_hashes
 
   let operations_path block i =
