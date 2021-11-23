@@ -2426,8 +2426,10 @@ module Tar_loader : LOADER = struct
          Onthefly.load_file t.tar file >>= fun str ->
          match Data_encoding.Json.from_string str with
          | Ok json ->
-             Lwt.return_some
-               (Data_encoding.Json.destruct Version.version_encoding json)
+             let p = Parallel.get_pool "encoding" in
+             Lwt_domain.detach p (fun () -> Some (Data_encoding.Json.destruct Version.version_encoding json)) ()
+             (* Lwt.return_some
+               (Data_encoding.Json.destruct Version.version_encoding json) *)
          | Error _ -> Lwt.return_none)
      | None -> Lwt.return_none)
     >>= function

@@ -38,8 +38,10 @@ let read_json_file file =
   Option.catch_os (fun () ->
       Lwt_utils_unix.Json.read_file (Naming.encoded_file_path file) >>= function
       | Ok json ->
+          let p = Parallel.get_pool "encoding" in
           let encoding = Naming.file_encoding file in
-          Lwt.return_some (Data_encoding.Json.destruct encoding json)
+          (* Lwt.return_some (Data_encoding.Json.destruct encoding json) *)
+          Lwt_domain.detach p (fun () -> Some (Data_encoding.Json.destruct encoding json)) ()
       | _ -> Lwt.return_none)
 
 let read_file file =
@@ -49,7 +51,8 @@ let read_file file =
       Lwt_utils_unix.read_file path)
     (fun str ->
       let encoding = Naming.file_encoding file in
-      Lwt.return (Data_encoding.Binary.of_string_opt encoding str))
+      let p = Parallel.get_pool "encoding" in
+      Lwt_domain.detach p (fun () -> Data_encoding.Binary.of_string_opt encoding str) ())
     (fun _ -> Lwt.return_none)
 
 let get (Stored_data v) =
