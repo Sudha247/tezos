@@ -2451,9 +2451,12 @@ let rec make_pp_chain_store (chain_store : chain_store) =
   let {chain_id; chain_dir; chain_config; chain_state; block_store; _} =
     chain_store
   in
-  let chain_config_json =
-    Data_encoding.Json.construct chain_config_encoding chain_config
-  in
+  (* let chain_config_json =
+    Data_encoding.Json.construct chain_config_encoding chain_config *)
+    let p = Parallel.get_pool "encoding" in
+    Lwt_domain.detach p (fun () -> Data_encoding.Json.construct chain_config_encoding chain_config) ()
+    >>= fun chain_config_json ->
+  (* in *)
   Shared.locked_use
     chain_state
     (fun
