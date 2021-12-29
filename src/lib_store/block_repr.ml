@@ -229,12 +229,19 @@ let check_block_consistency ?genesis_hash ?pred_block block =
              computed_hash = predecessor block;
            }))
   >>=? fun () ->
-  let computed_operations_hash =
+  (* let computed_operations_hash =
     Operation_list_list_hash.compute
       (List.map
          Operation_list_hash.compute
          (List.map (List.map Operation.hash) (operations block)))
-  in
+  in *)
+  let p = Parallel.get_pool "encoding" in
+      Lwt_domain.detach p (fun () ->
+        Operation_list_list_hash.compute
+        (List.map
+           Operation_list_hash.compute
+           (List.map (List.map Operation.hash) (operations block)))) () >>=
+  fun computed_operations_hash ->
   fail_unless
     (Operation_list_list_hash.equal
        computed_operations_hash

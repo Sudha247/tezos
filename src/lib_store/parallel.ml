@@ -16,4 +16,4 @@ let parallel_map_list pool f l =
 let get_pool name =
   match Lwt_domain.lookup_pool name with
   | Some x -> x
-  | None -> Lwt_domain.setup_pool ~name:name 2
+  | None -> Lwt_domain.setup_pool ~name:name 7

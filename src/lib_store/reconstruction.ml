@@ -294,10 +294,15 @@ let reconstruct_chunk chain_store context_index ~user_activated_upgrades
                stored in chunk being accumulated instead of reading
                it. *)
             let predecessor_block = Store.Unsafe.block_of_repr pred in
-            return
+            (* return
               ( predecessor_block,
                 Block_repr.block_metadata_hash pred,
-                compute_all_operations_metadata_hash pred ))
+                compute_all_operations_metadata_hash pred )) *)
+            let p = Parallel.get_pool "encoding" in
+              Lwt_domain.detach p (fun () -> ( predecessor_block,
+              Block_repr.block_metadata_hash pred,
+              compute_all_operations_metadata_hash pred )) () >>=
+              fun x -> return x)
         >>=? fun ( predecessor_block,
                    predecessor_block_metadata_hash,
                    predecessor_ops_metadata_hash ) ->
@@ -316,15 +321,23 @@ let reconstruct_chunk chain_store context_index ~user_activated_upgrades
         (Store.Block.proto_level block)
         (Store.Block.hash block)
       >>=? fun block_protocol_env ->
-      let reconstructed_block =
+      (* let reconstructed_block =
         restore_block_contents
           chain_store
           block_protocol_env
           ~block_metadata:metadata.block_metadata
           ~operations_metadata:metadata.operations_metadata
           metadata
-          (Store.Unsafe.repr_of_block block)
-      in
+          (Store.Unsafe.repr_of_block block) *)
+        let p = Parallel.get_pool "encoding" in
+          Lwt_domain.detach p (fun () -> 
+            restore_block_contents
+             chain_store
+             block_protocol_env
+             ~block_metadata:metadata.block_metadata
+             ~operations_metadata:metadata.operations_metadata
+             metadata
+             (Store.Unsafe.repr_of_block block)) () >>= fun reconstructed_block ->
       loop (Int32.succ level) ((reconstructed_block, block_protocol_env) :: acc)
   in
   loop start_level []
@@ -570,15 +583,24 @@ let reconstruct_floating chain_store context_index ~user_activated_upgrades
                 (Block_repr.proto_level block)
                 (Block_repr.hash block)
               >>=? fun block_protocol_env ->
-              let reconstructed_block =
+              (* let reconstructed_block =
                 restore_block_contents
                   chain_store
                   block_protocol_env
                   ~block_metadata:metadata.block_metadata
                   ~operations_metadata:metadata.operations_metadata
                   metadata
-                  block
-              in
+                  block *)
+              let p = Parallel.get_pool "encoding" in
+                  Lwt_domain.detach p (fun () -> 
+                  restore_block_contents
+                  chain_store
+                  block_protocol_env
+                  ~block_metadata:metadata.block_metadata
+                  ~operations_metadata:metadata.operations_metadata
+                  metadata
+                  block) () >>= fun reconstructed_block ->
+              
               Floating_block_store.append_block
                 new_ro_store
                 predecessors

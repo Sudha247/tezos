@@ -310,10 +310,15 @@ let read_block_metadata ?location cemented_store block_level =
                   in
                   let metadata = Zip.read_entry in_file entry in
                   Zip.close_in in_file ;
-                  return_some
+                  (* return_some
                     (Data_encoding.Binary.of_string_exn
                        Block_repr.metadata_encoding
-                       metadata))
+                       metadata)) *)
+                       let p = Parallel.get_pool "encoding" in
+                       Lwt_domain.detach p (fun () ->
+                        (Data_encoding.Binary.of_string_exn
+                        Block_repr.metadata_encoding
+                        metadata)) () >>= fun x -> return_some x)
                 (fun _ ->
                   Zip.close_in in_file ;
                   return_none))
