@@ -253,8 +253,13 @@ let read_next_block_exn fd =
   let block_bytes = Bytes.extend length_bytes 0 block_length in
   Lwt_utils_unix.read_bytes ~pos:4 ~len:block_length fd block_bytes
   >>= fun () ->
-  Lwt.return
-    (Data_encoding.Binary.of_bytes_exn encoding block_bytes, 4 + block_length)
+    let p = Parallel.get_pool "encoding" in
+    Lwt_domain.detach p 
+    (fun () ->
+      Data_encoding.Binary.of_bytes_exn encoding block_bytes, 4 + block_length)
+      ()
+  (* Lwt.return
+    (Data_encoding.Binary.of_bytes_exn encoding block_bytes, 4 + block_length) *)
 
 let read_next_block fd = Option.catch_s (fun () -> read_next_block_exn fd)
 
@@ -273,8 +278,13 @@ let pread_block_exn fd ~file_offset =
     fd
     block_bytes
   >>= fun () ->
-  Lwt.return
-    (Data_encoding.Binary.of_bytes_exn encoding block_bytes, 4 + block_length)
+    let p = Parallel.get_pool "encoding" in
+  Lwt_domain.detach p 
+    (fun () ->
+      Data_encoding.Binary.of_bytes_exn encoding block_bytes, 4 + block_length)
+      ()
+  (* Lwt.return
+    (Data_encoding.Binary.of_bytes_exn encoding block_bytes, 4 + block_length) *)
 
 let pread_block fd ~file_offset =
   Option.catch_s (fun () -> pread_block_exn fd ~file_offset)
