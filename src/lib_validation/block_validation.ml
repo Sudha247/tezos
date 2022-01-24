@@ -552,12 +552,13 @@ module Make (Proto : Registered_protocol.T) = struct
           match new_protocol_env_version with
           | Protocol.V0 -> Lwt.return (None, None)
           | Protocol.V1 | Protocol.V2 | Protocol.V3 | Protocol.V4 ->
+            let p = Parallel.get_pool_d "hash" in
               Lwt.return
                 ( Some
-                    (List.map
+                    (Domainslib.Task.run p (fun _ -> Parallel.parallel_map_list p
                        (List.map (fun r ->
                             Operation_metadata_hash.hash_bytes [r]))
-                       ops_metadata),
+                       ops_metadata)),
                   Some (Block_metadata_hash.hash_bytes [block_metadata]) )
         in
         let*! context_hash =
@@ -892,11 +893,12 @@ module Make (Proto : Registered_protocol.T) = struct
       match new_protocol_env_version with
       | Protocol.V0 -> Lwt.return (None, None)
       | Protocol.V1 | Protocol.V2 | Protocol.V3 | Protocol.V4 ->
+        let p = Parallel.get_pool_d "hash" in
           Lwt.return
-            ( Some
-                (List.map
+            ( Some (Domainslib.Task.run p (fun () -> 
+                (Parallel.parallel_map_list p
                    (List.map (fun r -> Operation_metadata_hash.hash_bytes [r]))
-                   ops_metadata),
+                   ops_metadata))),
               Some (Block_metadata_hash.hash_bytes [block_metadata]) )
     in
     let max_operations_ttl =

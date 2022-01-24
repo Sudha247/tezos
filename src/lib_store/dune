@@ -15,7 +15,9 @@
   ringo-lwt
   camlzip
   tar
-  tar-unix)
+  tar-unix
+  lwt_domain
+  domainslib)
  (flags
   (:standard
    -open Tezos_shell_services

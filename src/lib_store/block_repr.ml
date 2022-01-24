@@ -230,10 +230,11 @@ let check_block_consistency ?genesis_hash ?pred_block block =
            }))
   >>=? fun () ->
   let computed_operations_hash =
+    let p = Parallel.get_pool_d "hash" in
     Operation_list_list_hash.compute
-      (List.map
+      (Domainslib.Task.run p (fun () -> Parallel.parallel_map_list p
          Operation_list_hash.compute
-         (List.map (List.map Operation.hash) (operations block)))
+         (List.map (List.map Operation.hash) (operations block))))
   in
   fail_unless
     (Operation_list_list_hash.equal

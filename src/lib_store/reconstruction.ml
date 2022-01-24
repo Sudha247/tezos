@@ -165,10 +165,11 @@ let compute_block_metadata_hash block_metadata =
 
 (* We assume that the given list is not empty. *)
 let compute_operations_metadata_hashes ops_metadata_hashes =
+  let p = Parallel.get_pool_d "hash" in
   Some
-    (List.map
+    (Domainslib.Task.run p (fun () -> (Parallel.parallel_map_list p
        (List.map (fun r -> Operation_metadata_hash.hash_bytes [r]))
-       ops_metadata_hashes)
+       ops_metadata_hashes)))
 
 let compute_all_operations_metadata_hash block =
   if Block_repr.validation_passes block = 0 then None
